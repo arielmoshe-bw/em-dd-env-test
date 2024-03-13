@@ -87,25 +87,63 @@ void DirectDriveEnvironmentTestManager::handlePowerUpState()
 void DirectDriveEnvironmentTestManager::handleRowDrivingState()
 {
   static bool is_left = false;
-  if ((direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE) &&
-      isLoopTickPossible(turn_loop_timestamp_in_ms_, TURN_SPIN_RATE_IN_MS_))
+  
+  if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE)
   {
-    Log.infoln("handleRowDrivingState");
-    if(is_left)
+    if (isLoopTickPossible(row_loop_timestamp_in_ms_, ROW_SPIN_RATE_IN_MS_))
     {
-      direct_drive_steering_wheel_->setRpmPercentage(400);
+      if (row_counter_ > ROW_NUM_ITERATIONS_)
+      {
+        row_counter_ = 0;
+        setState(TURN_DRIVING_STATE);
+      }
+      else
+      {
+        Log.infoln("handleRowDrivingState row_counter_ = %d", row_counter_);
+        if (is_left)
+        {
+          direct_drive_steering_wheel_->setRpmPercentage(400);
+        }
+        else
+        {
+          direct_drive_steering_wheel_->setRpmPercentage(-400);
+        }
+        is_left ^= true;
+      }
+      row_counter_++;
     }
-    else
-    {
-      direct_drive_steering_wheel_->setRpmPercentage(-400);
-    }
-    is_left ^= true;
   }
 }
 
 void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
 {
-
+  static bool is_left = false;
+  
+  if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE)
+  {
+    if (isLoopTickPossible(turn_loop_timestamp_in_ms_, TURN_SPIN_RATE_IN_MS_))
+    {
+      Log.infoln("handleTurnDrivingState turn_counter_= %d", turn_counter_);
+      if (turn_counter_ > TURN_NUM_ITERATIONS_)
+      {
+        turn_counter_ = 0;
+        setState(ROW_DRIVING_STATE);
+      }
+      else
+      {
+        if (is_left)
+        {
+          direct_drive_steering_wheel_->setRpmPercentage(400);
+        }
+        else
+        {
+          direct_drive_steering_wheel_->setRpmPercentage(-400);
+        }
+        is_left ^= true;
+      }
+      turn_counter_++;
+    }
+  }
 }
 
 bool DirectDriveEnvironmentTestManager::isLoopTickPossible(volatile unsigned long &last_loop_timestamp_in_ms,

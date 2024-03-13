@@ -30,9 +30,17 @@ private:
   
   unsigned long main_system_timer_in_ms_ = 0;
   unsigned long main_loop_timestamp_in_ms_ = 0;
-  const unsigned long MAIN_LOOP_SPIN_RATE_IN_MS_ = 1000 / 250;
+  static constexpr unsigned long MAIN_LOOP_SPIN_RATE_IN_MS_ = 1000 / 250;
+
+  unsigned long row_loop_timestamp_in_ms_ = 0;
+  static constexpr unsigned long ROW_SPIN_RATE_IN_MS_ = 200;
+  uint32_t row_counter_ = 0;
+  static constexpr uint32_t ROW_NUM_ITERATIONS_ = 50;
+  
   unsigned long turn_loop_timestamp_in_ms_ = 0;
-  const unsigned long TURN_SPIN_RATE_IN_MS_ = 3000;
+  static constexpr  unsigned long TURN_SPIN_RATE_IN_MS_ = 1000;
+  uint32_t turn_counter_ = 0;
+  static constexpr uint32_t TURN_NUM_ITERATIONS_ = 10;
   
 public:
   DirectDriveEnvironmentTestManager();
