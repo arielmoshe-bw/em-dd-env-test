@@ -48,14 +48,16 @@ private:
   
   int rpm_percentage_ = 0;
   
-  uint8_t enable_motor_payload_data_[8] = {0};
-  uint8_t disable_motor_payload_data_[8] = {0};
-  uint8_t speed_command_motor_payload_data_[8] = {0};
-  uint8_t motor_current_query_payload_data_[8] = {0};
-  uint8_t encoder_motor_ang_velocity_query_payload_data_[8] = {0};
-  uint8_t motor_position_query_payload_data_[8] = {0};
-  uint8_t fault_query_payload_data_[8] = {0};
-  uint8_t program_version_payload_data_[8] = {0};
+  uint8_t enable_motor_payload_data_[8] = {0x23, 0x0d, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00};
+  uint8_t disable_motor_payload_data_[8] = {0x23, 0x0c, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00};
+  uint8_t speed_command_motor_payload_data_[8] = {0x23, 0x00, 0x20, 0x01, 0xB9, 0xB0, 0xFF, 0xFF};
+  uint8_t motor_current_query_payload_data_[8] = {0x40, 0x00, 0x21, 0x01, 0x00, 0x00, 0x00, 0x00};
+  uint8_t motor_voltage_query_payload_data_[8] = {0x40, 0x0D, 0x21, 0x02, 0x00, 0x00, 0x00, 0x00};
+  uint8_t motor_temperature_query_payload_data_[8] = {0x40, 0x0F, 0x21, 0x01, 0x00, 0x00, 0x00, 0x00};
+  uint8_t encoder_motor_ang_velocity_query_payload_data_[8] = {0x40, 0x03, 0x21, 0x01, 0x00, 0x00, 0x00, 0x00};
+  uint8_t motor_position_query_payload_data_[8] = {0x40, 0x04, 0x21, 0x01, 0x00, 0x00, 0x00, 0x00};
+  uint8_t fault_query_payload_data_[8] = {0x40, 0x12, 0x21, 0x01, 0x00, 0x00, 0x00, 0x00};
+  uint8_t program_version_payload_data_[8] = {0x40, 0x01, 0x11, 0x11, 0x00, 0x00, 0x00, 0x00};
 
   static constexpr uint32_t MOTOR_ID_ = 0x00000001;
   static constexpr uint32_t MOTOR_COMMANDS_ADDRESS_ID_ = 0x06000000 + MOTOR_ID_;
@@ -63,6 +65,8 @@ private:
   static constexpr uint32_t MOTOR_RESPONSE_ADDRESS_ID_ = 0x85800000 + MOTOR_ID_;
 
   static constexpr uint32_t MOTOR_CURRENT_RESPONSE_PREFIX_ = 0x60002101;
+  static constexpr uint32_t MOTOR_VOLTAGE_RESPONSE_PREFIX_ = 0x600D2102;
+  static constexpr uint32_t MOTOR_TEMPERATURE_RESPONSE_PREFIX_ = 0x600F2101;
   static constexpr uint32_t MOTOR_ENCODER_VELOCITY_RESPONSE_PREFIX_ = 0x60032101;
   static constexpr uint32_t MOTOR_ENCODER_POSITION_RESPONSE_PREFIX_ = 0x60042101;
   static constexpr uint32_t FAULT_RESPONSE_PREFIX_ = 0x60122101;
@@ -87,6 +91,8 @@ private:
 
   static constexpr float MAX_CURRENT_IN_AMPS = 20.0;
   float motor_current_in_amps_ = 0.0;
+  float motor_voltage_in_volts_ = 0.0;
+  short motor_temperature_in_deg_ = 0.0;
   float motor_encoder_velocity_ = 0.0;
   int32_t motor_encoder_position_ = 0;
   
@@ -149,14 +155,7 @@ private:
   
   bool isVersionMotorUpdated();
 
-  void sendEnableMotorCommand();
-  void sendDisableMotorCommand();
-  void sendSpeedCommand();
-  void sendMotorSoftwareVersionQuery();
-  void sendMotorCurrentQuery();
-  void sendMotorAngularVelocityQuery();
-  void sendMotorPositionQuery();
-  void sendMotorFaultQuery();
+  void sendMotorQuery(uint8_t* data);
 
   void clearAllMotorFaultCodes() { motor_fault_code_ &= 0x0000; };
   void clearMotorFaultCode(unsigned long motor_fault_code) { motor_fault_code_ &= ~motor_fault_code; };
@@ -179,6 +178,8 @@ public:
   MotorOperationMode getOperationMode() const { return motor_operation_mode_;};
   
   float getMotorCurrentInAmps() const { return motor_current_in_amps_; }
+  float getMotorVoltageInVolts() const { return motor_voltage_in_volts_; }
+  short getMotorTemperatureInDegree() const { return motor_temperature_in_deg_; }
   float getMotorEncoderVelocity() const { return motor_encoder_velocity_; }
   int32_t getMotorEncoderPosition() const { return motor_encoder_position_; }
   uint16_t getMotorFaultCode() const { return motor_fault_code_; }

@@ -46,8 +46,12 @@ void DirectDriveEnvironmentTestManager::handleState()
   direct_drive_steering_wheel_->tick();
   
   if(current_state_ != POWER_UP_STATE)
+  
+  if(direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE &&
+     current_state_ != POWER_UP_STATE)
   {
     direct_drive_steering_wheel_->performContinuousBuiltInTest();
+    printData();
   }
   
   switch (current_state_)
@@ -99,7 +103,7 @@ void DirectDriveEnvironmentTestManager::handleRowDrivingState()
       }
       else
       {
-        Log.infoln("handleRowDrivingState row_counter_ = %d", row_counter_);
+        //Log.infoln("handleRowDrivingState row_counter_ = %d", row_counter_);
         if (is_left)
         {
           direct_drive_steering_wheel_->setRpmPercentage(400);
@@ -123,7 +127,7 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
   {
     if (isLoopTickPossible(turn_loop_timestamp_in_ms_, TURN_SPIN_RATE_IN_MS_))
     {
-      Log.infoln("handleTurnDrivingState turn_counter_= %d", turn_counter_);
+      //Log.infoln("handleTurnDrivingState turn_counter_= %d", turn_counter_);
       if (turn_counter_ > TURN_NUM_ITERATIONS_)
       {
         turn_counter_ = 0;
@@ -143,6 +147,26 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
       }
       turn_counter_++;
     }
+  }
+}
+
+void DirectDriveEnvironmentTestManager::printData()
+{
+  if (isLoopTickPossible(data_loop_timestamp_in_ms_, DATA_SPIN_RATE_IN_MS_))
+  {
+    Serial.print("Current in amps:");
+    Serial.println(direct_drive_steering_wheel_->getMotorCurrentInAmps());
+    Serial.print("Voltage in volts:");
+    Serial.println(direct_drive_steering_wheel_->getMotorVoltageInVolts());
+    Serial.print("Temperature in degree:");
+    Serial.println(direct_drive_steering_wheel_->getMotorTemperatureInDegree());
+    Serial.print("Encoder velocity in rpm:");
+    Serial.println(direct_drive_steering_wheel_->getMotorEncoderVelocity());
+    Serial.print("Encoder position in degree:");
+    Serial.println(direct_drive_steering_wheel_->getMotorEncoderPosition());
+    Serial.print("Fault code:");
+    Serial.println(direct_drive_steering_wheel_->getMotorFaultCode(), HEX);
+    Serial.println(); // Add an empty line to separate data packets
   }
 }
 

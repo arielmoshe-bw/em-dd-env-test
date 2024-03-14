@@ -24,78 +24,6 @@ void DirectDriveSteeringWheel::initializeCanCommunication()
   mcp2515.reset();
   mcp2515.setBitrate(CAN_250KBPS, MCP_8MHZ);
   mcp2515.setNormalMode();
-
-  enable_motor_payload_data_[0] = 0x23;
-  enable_motor_payload_data_[1] = 0x0d;
-  enable_motor_payload_data_[2] = 0x20;
-  enable_motor_payload_data_[3] = 0x01;
-  enable_motor_payload_data_[4] = 0x00;
-  enable_motor_payload_data_[5] = 0x00;
-  enable_motor_payload_data_[6] = 0x00;
-  enable_motor_payload_data_[7] = 0x00;
-
-  speed_command_motor_payload_data_[0] = 0x23;
-  speed_command_motor_payload_data_[1] = 0x00;
-  speed_command_motor_payload_data_[2] = 0x20;
-  speed_command_motor_payload_data_[3] = 0x01;
-  speed_command_motor_payload_data_[4] = 0xB9;
-  speed_command_motor_payload_data_[5] = 0xB0;
-  speed_command_motor_payload_data_[6] = 0xFF;
-  speed_command_motor_payload_data_[7] = 0xFF;
-
-  disable_motor_payload_data_[0] = 0x23;
-  disable_motor_payload_data_[1] = 0x0c;
-  disable_motor_payload_data_[2] = 0x20;
-  disable_motor_payload_data_[3] = 0x01;
-  disable_motor_payload_data_[4] = 0x00;
-  disable_motor_payload_data_[5] = 0x00;
-  disable_motor_payload_data_[6] = 0x00;
-  disable_motor_payload_data_[7] = 0x00;
-
-  motor_current_query_payload_data_[0] = 0x40;
-  motor_current_query_payload_data_[1] = 0x00;
-  motor_current_query_payload_data_[2] = 0x21;
-  motor_current_query_payload_data_[3] = 0x01;
-  motor_current_query_payload_data_[4] = 0x00;
-  motor_current_query_payload_data_[5] = 0x00;
-  motor_current_query_payload_data_[6] = 0x00;
-  motor_current_query_payload_data_[7] = 0x00;
-
-  encoder_motor_ang_velocity_query_payload_data_[0] = 0x40;
-  encoder_motor_ang_velocity_query_payload_data_[1] = 0x03;
-  encoder_motor_ang_velocity_query_payload_data_[2] = 0x21;
-  encoder_motor_ang_velocity_query_payload_data_[3] = 0x01;
-  encoder_motor_ang_velocity_query_payload_data_[4] = 0x00;
-  encoder_motor_ang_velocity_query_payload_data_[5] = 0x00;
-  encoder_motor_ang_velocity_query_payload_data_[6] = 0x00;
-  encoder_motor_ang_velocity_query_payload_data_[7] = 0x00;
-
-  motor_position_query_payload_data_[0] = 0x40;
-  motor_position_query_payload_data_[1] = 0x04;
-  motor_position_query_payload_data_[2] = 0x21;
-  motor_position_query_payload_data_[3] = 0x01;
-  motor_position_query_payload_data_[4] = 0x00;
-  motor_position_query_payload_data_[5] = 0x00;
-  motor_position_query_payload_data_[6] = 0x00;
-  motor_position_query_payload_data_[7] = 0x00;
-
-  fault_query_payload_data_[0] = 0x40;
-  fault_query_payload_data_[1] = 0x12;
-  fault_query_payload_data_[2] = 0x21;
-  fault_query_payload_data_[3] = 0x01;
-  fault_query_payload_data_[4] = 0x00;
-  fault_query_payload_data_[5] = 0x00;
-  fault_query_payload_data_[6] = 0x00;
-  fault_query_payload_data_[7] = 0x00;
-
-  program_version_payload_data_[0] = 0x40;
-  program_version_payload_data_[1] = 0x01;
-  program_version_payload_data_[2] = 0x11;
-  program_version_payload_data_[3] = 0x11;
-  program_version_payload_data_[4] = 0x00;
-  program_version_payload_data_[5] = 0x00;
-  program_version_payload_data_[6] = 0x00;
-  program_version_payload_data_[7] = 0x00;
 }
 
 bool DirectDriveSteeringWheel::performPowerUpBuiltInTest()
@@ -114,7 +42,7 @@ bool DirectDriveSteeringWheel::performContinuousBuiltInTest()
 {
   if (not isVersionMotorUpdated())
   {
-    sendMotorSoftwareVersionQuery();
+    sendMotorQuery(program_version_payload_data_);
   }
 
   checkForMessageFromMotor();
@@ -124,12 +52,14 @@ bool DirectDriveSteeringWheel::performContinuousBuiltInTest()
   overCurrentContinuousBitProcess();
 
   publishKeepAliveToMotorWhenDisabled();
+  sendMotorQuery(motor_voltage_query_payload_data_);
+  sendMotorQuery(motor_temperature_query_payload_data_);
 }
 
 void DirectDriveSteeringWheel::lockActuator()
 {
   command(0);
-  sendDisableMotorCommand();
+  sendMotorQuery(disable_motor_payload_data_);
   is_motor_enabled_ = false;
 }
 
@@ -137,7 +67,7 @@ void DirectDriveSteeringWheel::releaseActuator()
 {
   if (not is_motor_enabled_)
   {
-    sendEnableMotorCommand();
+    sendMotorQuery(enable_motor_payload_data_);
     is_motor_enabled_ = true;
     command(0);
   }
@@ -166,7 +96,7 @@ bool DirectDriveSteeringWheel::command(int rpm_percentage)
   speed_command_motor_payload_data_[6] = mixedEndianHex & 0xFF;
   speed_command_motor_payload_data_[7] = (mixedEndianHex >> 8) & 0xFF;
   
-  sendSpeedCommand();
+  sendMotorQuery(speed_command_motor_payload_data_);
 
   return true;
 }
@@ -247,7 +177,8 @@ void DirectDriveSteeringWheel::parseResponseFromMotor(const can_frame &response_
 
   switch (response_data_type)
   {
-    case MOTOR_PROGRAM_VERSION_PREFIX_: {
+    case MOTOR_PROGRAM_VERSION_PREFIX_:
+    {
       motor_program_version_[0] = response_can_frame.data[4];
       motor_program_version_[1] = response_can_frame.data[5];
       motor_program_version_[2] = response_can_frame.data[6];
@@ -257,34 +188,59 @@ void DirectDriveSteeringWheel::parseResponseFromMotor(const can_frame &response_
 
       break;
     }
-    case MOTOR_CURRENT_RESPONSE_PREFIX_: {
+    case MOTOR_CURRENT_RESPONSE_PREFIX_:
+    {
       motor_current_in_amps_ = response_can_frame.data[4];
       break;
     }
-    case MOTOR_ENCODER_VELOCITY_RESPONSE_PREFIX_: {
+    case MOTOR_VOLTAGE_RESPONSE_PREFIX_:
+    {
+      motor_voltage_in_volts_ = response_can_frame.data[4];
+      break;
+    }
+    case MOTOR_TEMPERATURE_RESPONSE_PREFIX_:
+    {
+      motor_temperature_in_deg_ = response_can_frame.data[4];
+      break;
+    }
+    case MOTOR_ENCODER_VELOCITY_RESPONSE_PREFIX_:
+    {
       motor_encoder_velocity_ = response_can_frame.data[5] << 8 | response_can_frame.data[4];
       break;
     }
     case MOTOR_ENCODER_POSITION_RESPONSE_PREFIX_:
-      motor_encoder_position_ = response_can_frame.data[7] << 24 | response_can_frame.data[6] << 16 | response_can_frame.data[5] << 8 | response_can_frame.data[4];
+    {
+      motor_encoder_position_ =
+        response_can_frame.data[7] << 24 | response_can_frame.data[6] << 16 | response_can_frame.data[5] << 8
+          | response_can_frame.data[4];
       break;
+    }
     case FAULT_RESPONSE_PREFIX_:
+    {
       setMotorFaultCode(response_can_frame.data[6] << 8 | response_can_frame.data[7]);
       break;
+    }
     case 0x60002000:// TODO: Get from the datasheet the name of the prefix here
+    {
       break;
+    }
     case MOTOR_ENABLED_CONFIRMATION_PREFIX_:
+    {
       Log.infoln(F("DD Motor enabled confirmed"));
       clearMotorFaultCode(MOTOR_DISABLED_FAULT_CODE_);
       break;
+    }
     case MOTOR_DISABLED_CONFIRMATION_PREFIX_:
+    {
       if (not checkIfMotorDisabledFaultCodeFlagged())
       {
         Log.infoln(F("DD Motor disabled confirmed"));
         setMotorFaultCode(MOTOR_DISABLED_FAULT_CODE_);
       }
       break;
-    default: return;
+    }
+    default:
+      return;
   }
 }
 
@@ -312,7 +268,7 @@ bool DirectDriveSteeringWheel::motorKeepAliveContinuousBuiltInTest()
       motor_keep_alive_is_healthy_ = true;
       if (is_motor_enabled_ and checkIfMotorDisabledFaultCodeFlagged())
       {
-        sendEnableMotorCommand();
+        sendMotorQuery(enable_motor_payload_data_);
       }
     }
   }
@@ -464,7 +420,7 @@ void DirectDriveSteeringWheel::powerUpSequenceProcess()
         }
         general_sequence_timestamp_ = main_system_timer_in_ms_;
         Log.infoln(F("Disabling DD Motor, waiting for %dms"), RECOVERY_MOTOR_ENABLE_WAITING_TIME_IN_MS);
-        sendDisableMotorCommand();
+        sendMotorQuery(disable_motor_payload_data_);
       }
       break;
     }
@@ -473,7 +429,7 @@ void DirectDriveSteeringWheel::powerUpSequenceProcess()
       {
         Log.infoln(F("Enabling DD Motor, waiting for %dms to Enable motor"), RECOVERY_MOTOR_COMPLETED_WAITING_TIME_IN_MS);
         current_power_up_sequence_stage_ = PowerUpSequenceStages::POWER_UP_COMPLETED;
-        sendEnableMotorCommand();
+        sendMotorQuery(enable_motor_payload_data_);
         command(0);
       }
       break;
@@ -523,103 +479,19 @@ void DirectDriveSteeringWheel::publishKeepAliveToMotorWhenDisabled()
   if (not is_motor_enabled_)
   {
     if (TimerHelper::timeHasPassed(main_system_timer_in_ms_, last_ka_published_to_motor_timestamp, 100)) {
-      sendDisableMotorCommand();
+      sendMotorQuery(disable_motor_payload_data_);
     }
   }
 }
 
-void DirectDriveSteeringWheel::sendMotorSoftwareVersionQuery()
+void DirectDriveSteeringWheel::sendMotorQuery(uint8_t* motor_query_payload_data_)
 {
   can_frame can_message_to_send = can_frame();
 
   can_message_to_send.can_id = MOTOR_COMMANDS_ADDRESS_ID_ | CAN_EFF_FLAG;
   can_message_to_send.can_dlc = 8;
 
-  memcpy(can_message_to_send.data, program_version_payload_data_, 8);
-
-  mcp2515.sendMessage(&can_message_to_send);
-}
-
-void DirectDriveSteeringWheel::sendEnableMotorCommand()
-{
-  can_frame can_message_to_send = can_frame();
-
-  can_message_to_send.can_id = MOTOR_COMMANDS_ADDRESS_ID_ | CAN_EFF_FLAG;
-  can_message_to_send.can_dlc = 8;
-
-  memcpy(can_message_to_send.data, enable_motor_payload_data_, 8);
-
-  mcp2515.sendMessage(&can_message_to_send);
-}
-
-void DirectDriveSteeringWheel::sendDisableMotorCommand()
-{
-  can_frame can_message_to_send = can_frame();
-
-  can_message_to_send.can_id = MOTOR_COMMANDS_ADDRESS_ID_ | CAN_EFF_FLAG;
-  can_message_to_send.can_dlc = 8;
-
-  memcpy(can_message_to_send.data, disable_motor_payload_data_, 8);
-
-  mcp2515.sendMessage(&can_message_to_send);
-}
-
-void DirectDriveSteeringWheel::sendSpeedCommand()
-{
-  can_frame can_message_to_send = can_frame();
-
-  can_message_to_send.can_id = MOTOR_COMMANDS_ADDRESS_ID_ | CAN_EFF_FLAG;
-  can_message_to_send.can_dlc = 8;
-
-  memcpy(can_message_to_send.data, speed_command_motor_payload_data_, 8);
-
-  mcp2515.sendMessage(&can_message_to_send);
-}
-
-void DirectDriveSteeringWheel::sendMotorCurrentQuery()
-{
-  can_frame can_message_to_send = can_frame();
-
-  can_message_to_send.can_id = MOTOR_COMMANDS_ADDRESS_ID_ | CAN_EFF_FLAG;
-  can_message_to_send.can_dlc = 8;
-
-  memcpy(can_message_to_send.data, motor_current_query_payload_data_, 8);
-
-  mcp2515.sendMessage(&can_message_to_send);
-}
-
-void DirectDriveSteeringWheel::sendMotorAngularVelocityQuery()
-{
-  can_frame can_message_to_send = can_frame();
-
-  can_message_to_send.can_id = MOTOR_COMMANDS_ADDRESS_ID_ | CAN_EFF_FLAG;
-  can_message_to_send.can_dlc = 8;
-
-  memcpy(can_message_to_send.data, encoder_motor_ang_velocity_query_payload_data_, 8);
-
-  mcp2515.sendMessage(&can_message_to_send);
-}
-
-void DirectDriveSteeringWheel::sendMotorPositionQuery()
-{
-  can_frame can_message_to_send = can_frame();
-
-  can_message_to_send.can_id = MOTOR_COMMANDS_ADDRESS_ID_ | CAN_EFF_FLAG;
-  can_message_to_send.can_dlc = 8;
-
-  memcpy(can_message_to_send.data, motor_position_query_payload_data_, 8);
-
-  mcp2515.sendMessage(&can_message_to_send);
-}
-
-void DirectDriveSteeringWheel::sendMotorFaultQuery()
-{
-  can_frame can_message_to_send = can_frame();
-
-  can_message_to_send.can_id = MOTOR_COMMANDS_ADDRESS_ID_ | CAN_EFF_FLAG;
-  can_message_to_send.can_dlc = 8;
-
-  memcpy(can_message_to_send.data, fault_query_payload_data_, 8);
+  memcpy(can_message_to_send.data, motor_query_payload_data_, 8);
 
   mcp2515.sendMessage(&can_message_to_send);
 }
