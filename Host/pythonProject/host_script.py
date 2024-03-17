@@ -7,6 +7,24 @@ import time
 import threading
 from queue import Queue
 
+error_descriptions = [
+    "Less phase",
+    "Motor stall",
+    "Reserved",
+    "Hall failure",
+    "Current sensing",
+    "232 disconnected",
+    "CAN disconnected",
+    "Motor stalled",
+    "Disabled",
+    "Overvoltage",
+     "Hardware protection",
+     "E2PROM",
+     "Undervoltage",
+     "N/A",
+     "Overcurrent",
+     "Mode failure"
+]
 # Initialize serial connection
 ser = serial.Serial('/dev/ttyACM0', 115200)
 
@@ -33,15 +51,15 @@ lines = []
 for i in range(5):
     lines.append(axs[i].plot([], [], lw=2)[0])
 
-axs[0].set_title('Current in amps')
-axs[1].set_title('Voltage in volts')
-axs[2].set_title('Temperature in degree')
-axs[3].set_title('Encoder velocity in rpm')
-axs[4].set_title('Encoder position in degree')
+axs[0].set_title('Current in amps', fontsize=15, weight='bold')
+axs[1].set_title('Voltage in volts', fontsize=15, weight='bold')
+axs[2].set_title('Temperature in degree', fontsize=15, weight='bold')
+axs[3].set_title('Encoder velocity in rpm', fontsize=15, weight='bold')
+axs[4].set_title('Encoder position in degree', fontsize=15, weight='bold')
 plt.tight_layout()
 
 # Initialize fault code
-fault_code = ""
+fault_code = 0
 
 # Queue for communication between threads
 data_queue = Queue()
@@ -61,7 +79,8 @@ def update_plot():
         label, value = item
         if label == "Fault code":
             global fault_code
-            fault_code = value
+            fault_code = int(value, 16)
+
         elif label == "Current in amps":
             data1.appendleft(float(value))
         elif label == "Voltage in volts":
@@ -99,11 +118,14 @@ def update_plot():
         ax.autoscale_view()
 
     if not axs[-1].texts:
-        fault_text = axs[-1].text(0.1, 13, "", horizontalalignment='center', verticalalignment='center',
-                                  transform=axs[-1].transAxes)
+        fault_text = axs[-1].text(-0.07, 13, "", horizontalalignment='center', verticalalignment='center',
+                                  transform=axs[-1].transAxes, fontsize=20, weight='bold')
     else:
         fault_text = axs[-1].texts[0]
-    fault_text.set_text("Fault code: " + fault_code)
+
+    # Extract and display error descriptions from fault code
+    active_errors = [error_descriptions[i] for i in range(16) if (fault_code >> i) & 1]
+    fault_text.set_text("Fault code: " + hex(fault_code) + "\n" + "\n".join(active_errors))
 
     plt.draw()
     plt.pause(0.0005)
@@ -131,7 +153,6 @@ def data_acquisition():
         data_queue.put((label, value))
 
 
-# Function to periodically save data to CSV file
 # Function to periodically save data to CSV file
 def save_to_csv(start_time, stop_saving_event):
     try:
