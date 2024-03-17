@@ -24,6 +24,7 @@ void DirectDriveEnvironmentTestManager::setup()
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   
   direct_drive_steering_wheel_ = new DirectDriveSteeringWheel();
+  Serial.println("start sampling");
 }
 
 void DirectDriveEnvironmentTestManager::run()
@@ -44,8 +45,6 @@ void DirectDriveEnvironmentTestManager::setState(const DirectDriveEnvironmentTes
 void DirectDriveEnvironmentTestManager::handleState()
 {
   direct_drive_steering_wheel_->tick();
-  
-  if(current_state_ != POWER_UP_STATE)
   
   if(direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE &&
      current_state_ != POWER_UP_STATE)
