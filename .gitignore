@@ -38,3 +38,7 @@ libraries/
 .idea/
 
 *.lst
+
+Host/pythonProject/build/
+
+Host/pythonProject/host_script.spec

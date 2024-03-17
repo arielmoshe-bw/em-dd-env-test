@@ -1,3 +1,5 @@
+import os
+import sys
 import serial
 import csv
 import signal
@@ -18,12 +20,12 @@ error_descriptions = [
     "Motor stalled",
     "Disabled",
     "Overvoltage",
-     "Hardware protection",
-     "E2PROM",
-     "Undervoltage",
-     "N/A",
-     "Overcurrent",
-     "Mode failure"
+    "Hardware protection",
+    "E2PROM",
+    "Undervoltage",
+    "N/A",
+    "Overcurrent",
+    "Mode failure"
 ]
 # Initialize serial connection
 ser = serial.Serial('/dev/ttyACM0', 115200)
@@ -60,6 +62,9 @@ plt.tight_layout()
 
 # Initialize fault code
 fault_code = 0
+fault_code_text = ""
+
+stop_plotting = False
 
 # Queue for communication between threads
 data_queue = Queue()
@@ -94,22 +99,22 @@ def update_plot():
 
     elapsed_time = time.time() - start_time
 
-    x_axis1 = [elapsed_time - i * 0.005 for i in range(len(data1))]
-    x_axis2 = [elapsed_time - i * 0.005 for i in range(len(data2))]
-    x_axis3 = [elapsed_time - i * 0.005 for i in range(len(data3))]
-    x_axis4 = [elapsed_time - i * 0.005 for i in range(len(data4))]
-    x_axis5 = [elapsed_time - i * 0.005 for i in range(len(data5))]
+    x_axis1 = [elapsed_time - j * 0.005 for j in range(len(data1))]
+    x_axis2 = [elapsed_time - j * 0.005 for j in range(len(data2))]
+    x_axis3 = [elapsed_time - j * 0.005 for j in range(len(data3))]
+    x_axis4 = [elapsed_time - j * 0.005 for j in range(len(data4))]
+    x_axis5 = [elapsed_time - j * 0.005 for j in range(len(data5))]
 
-    for i, line in enumerate(lines):
-        if i == 0:
+    for k, line in enumerate(lines):
+        if k == 0:
             line.set_data(x_axis1, data1)
-        elif i == 1:
+        elif k == 1:
             line.set_data(x_axis2, data2)
-        elif i == 2:
+        elif k == 2:
             line.set_data(x_axis3, data3)
-        elif i == 3:
+        elif k == 3:
             line.set_data(x_axis4, data4)
-        elif i == 4:
+        elif k == 4:
             line.set_data(x_axis5, data5)
 
     for ax in axs:
@@ -118,14 +123,16 @@ def update_plot():
         ax.autoscale_view()
 
     if not axs[-1].texts:
-        fault_text = axs[-1].text(-0.07, 13, "", horizontalalignment='center', verticalalignment='center',
-                                  transform=axs[-1].transAxes, fontsize=20, weight='bold')
+        fault_text = axs[-1].text(0.5, 14, "", horizontalalignment='center', verticalalignment='center',
+                                  transform=axs[-1].transAxes, fontsize=15, weight='bold')
     else:
         fault_text = axs[-1].texts[0]
 
     # Extract and display error descriptions from fault code
     active_errors = [error_descriptions[i] for i in range(16) if (fault_code >> i) & 1]
-    fault_text.set_text("Fault code: " + hex(fault_code) + "\n" + "\n".join(active_errors))
+    global fault_code_text
+    fault_code_text = "Fault code: " + hex(fault_code) + " - [ " + ", ".join(active_errors) + " ]"
+    fault_text.set_text(fault_code_text)
 
     plt.draw()
     plt.pause(0.0005)
@@ -133,7 +140,8 @@ def update_plot():
 
 # Function for data acquisition
 def data_acquisition():
-    while True:
+    global stop_plotting
+    while not stop_plotting:
         line = ser.readline()
         try:
             line = line.decode('utf-8').strip()
@@ -158,7 +166,9 @@ def save_to_csv(start_time, stop_saving_event):
     try:
         with open('data.csv', 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['Time (s)', 'Current (amps)', 'Voltage (volts)', 'Temperature (degree)', 'Encoder velocity (rpm)', 'Encoder position (degree)'])
+            writer.writerow(
+                ['Time (s)', 'Current (amps)', 'Voltage (volts)', 'Temperature (degree)', 'Encoder velocity (rpm)',
+                 'Encoder position (degree)', 'Error Description'])
 
             while not stop_saving_event.is_set():
                 # Collect data from all queues (assuming same length)
@@ -166,7 +176,8 @@ def save_to_csv(start_time, stop_saving_event):
                 if len(data1) > 0:
                     for queue in [data1, data2, data3, data4, data5]:
                         data_points.append(queue[-1])  # Get the latest value from each queue
-                    data_point = (time.time() - start_time,) + tuple(data_points)  # Combine with timestamp
+                    global fault_code_text
+                    data_point = (time.time() - start_time,) + tuple(data_points) + (fault_code_text,)
                     writer.writerow(data_point)
                 time.sleep(0.1)  # Adjust the interval as needed
 
@@ -178,10 +189,11 @@ def save_to_csv(start_time, stop_saving_event):
 
 # Function to handle interrupt signal (Ctrl+C)
 def signal_handler(sig, frame):
-    print("Stopping script...")
+    print("Script stopped")
     stop_saving_event.set()  # Signal the save_to_csv thread to stop
-    # Exit the script
-    exit(0)
+
+    global stop_plotting  # Access the global flag
+    stop_plotting = True
 
 
 # Register the signal handler
@@ -198,8 +210,9 @@ csv_thread.start()
 data_thread = threading.Thread(target=data_acquisition)
 data_thread.start()
 
-
 # Main loop to update the plot
-while True:
+while not stop_plotting:
     update_plot()
 
+plt.close()
+os._exit(1)
