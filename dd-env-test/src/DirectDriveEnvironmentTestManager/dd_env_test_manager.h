@@ -59,6 +59,7 @@ private:
   void handlePowerUpState();
   void handleRowDrivingState();
   void handleTurnDrivingState();
+  void isHostReady();
   
   void printData();
   bool isLoopTickPossible(volatile unsigned long &last_loop_timestamp_in_ms, const unsigned long loop_spin_rate_in_ms);

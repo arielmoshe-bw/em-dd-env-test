@@ -1,13 +1,18 @@
 import serial
+import csv
+import signal
 import matplotlib.pyplot as plt
 from collections import deque
 import time
+import threading
+from queue import Queue
 
 # Initialize serial connection
 ser = serial.Serial('/dev/ttyACM0', 115200)
 
 # Wait for "start sampling" message from Arduino
 while True:
+    ser.write(b"ready\n")
     line = ser.readline().decode('utf-8').strip()
     if line == "start sampling":
         break
@@ -38,77 +43,142 @@ plt.tight_layout()
 # Initialize fault code
 fault_code = ""
 
+# Queue for communication between threads
+data_queue = Queue()
 
-# Function to update the plot and display fault code as text
+# Initialize time variables
+start_time = time.time()
+
+
 # Function to update the plot and display fault code as text
 def update_plot():
-    lines[0].set_data(range(len(data1)), data1)
-    lines[1].set_data(range(len(data2)), data2)
-    lines[2].set_data(range(len(data3)), data3)
-    lines[3].set_data(range(len(data4)), data4)
-    lines[4].set_data(range(len(data5)), data5)
+    global start_time
+
+    while not data_queue.empty():
+        item = data_queue.get()
+        if item is None:
+            continue
+        label, value = item
+        if label == "Fault code":
+            global fault_code
+            fault_code = value
+        elif label == "Current in amps":
+            data1.appendleft(float(value))
+        elif label == "Voltage in volts":
+            data2.appendleft(float(value))
+        elif label == "Temperature in degree":
+            data3.appendleft(int(value))
+        elif label == "Encoder velocity in rpm":
+            data4.appendleft(float(value))
+        elif label == "Encoder position in degree":
+            data5.appendleft(int(value))
+
+    elapsed_time = time.time() - start_time
+
+    x_axis1 = [elapsed_time - i * 0.005 for i in range(len(data1))]
+    x_axis2 = [elapsed_time - i * 0.005 for i in range(len(data2))]
+    x_axis3 = [elapsed_time - i * 0.005 for i in range(len(data3))]
+    x_axis4 = [elapsed_time - i * 0.005 for i in range(len(data4))]
+    x_axis5 = [elapsed_time - i * 0.005 for i in range(len(data5))]
+
+    for i, line in enumerate(lines):
+        if i == 0:
+            line.set_data(x_axis1, data1)
+        elif i == 1:
+            line.set_data(x_axis2, data2)
+        elif i == 2:
+            line.set_data(x_axis3, data3)
+        elif i == 3:
+            line.set_data(x_axis4, data4)
+        elif i == 4:
+            line.set_data(x_axis5, data5)
 
     for ax in axs:
+        ax.set_xlabel('Time (s)')
         ax.relim()
         ax.autoscale_view()
 
-    # Check if the text object for fault code already exists
     if not axs[-1].texts:
-        # Create a new text object for fault code
         fault_text = axs[-1].text(0.1, 13, "", horizontalalignment='center', verticalalignment='center',
                                   transform=axs[-1].transAxes)
     else:
-        # Use the existing text object for fault code
         fault_text = axs[-1].texts[0]
-
-    # Update only the fault code number
     fault_text.set_text("Fault code: " + fault_code)
 
     plt.draw()
-    plt.pause(0.01)  # Adjust the pause duration as needed
+    plt.pause(0.0005)
 
 
-# Main loop to collect data and update the plot
-while True:
-    # Read a line from serial as raw bytes
-    line = ser.readline()
+# Function for data acquisition
+def data_acquisition():
+    while True:
+        line = ser.readline()
+        try:
+            line = line.decode('utf-8').strip()
+        except UnicodeDecodeError:
+            print("Failed to decode line:", line)
+            continue
 
-    # Decode the line as UTF-8, ignoring errors
+        if not line:
+            continue
+
+        parts = line.split(':')
+        if len(parts) != 2:
+            print("Invalid data format:", line)
+            continue
+
+        label, value = parts
+        data_queue.put((label, value))
+
+
+# Function to periodically save data to CSV file
+# Function to periodically save data to CSV file
+def save_to_csv(start_time, stop_saving_event):
     try:
-        line = line.decode('utf-8').strip()
-    except UnicodeDecodeError:
-        print("Failed to decode line:", line)
-        continue
+        with open('data.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['Time (s)', 'Current (amps)', 'Voltage (volts)', 'Temperature (degree)', 'Encoder velocity (rpm)', 'Encoder position (degree)'])
 
-    # Skip processing if the line is empty
-    if not line:
-        continue
+            while not stop_saving_event.is_set():
+                # Collect data from all queues (assuming same length)
+                data_points = []
+                if len(data1) > 0:
+                    for queue in [data1, data2, data3, data4, data5]:
+                        data_points.append(queue[-1])  # Get the latest value from each queue
+                    data_point = (time.time() - start_time,) + tuple(data_points)  # Combine with timestamp
+                    writer.writerow(data_point)
+                time.sleep(0.1)  # Adjust the interval as needed
 
-    # Split the line by ':' to separate label and value
-    parts = line.split(':')
-    if len(parts) != 2:
-        print("Invalid data format:", line)
-        continue
+    except Exception as e:
+        print("Error occurred while writing to CSV:", e)
+    finally:
+        csvfile.close()
 
-    label, value = parts
 
-    # Check if it's a fault code update
-    if label == "Fault code":
-        fault_code = value  # Update fault_code variable here
-        # print("Received fault code:", fault_code)  # Print received fault code for debugging
-        update_plot()
+# Function to handle interrupt signal (Ctrl+C)
+def signal_handler(sig, frame):
+    print("Stopping script...")
+    stop_saving_event.set()  # Signal the save_to_csv thread to stop
+    # Exit the script
+    exit(0)
 
-    # Append data to respective deques based on label
-    if label == "Current in amps":
-        data1.append(float(value))
-    elif label == "Voltage in volts":
-        data2.append(float(value))
-    elif label == "Temperature in degree":
-        data3.append(int(value))
-    elif label == "Encoder velocity in rpm":
-        data4.append(float(value))
-    elif label == "Encoder position in degree":
-        data5.append(int(value))
 
-    # Update the plot
+# Register the signal handler
+signal.signal(signal.SIGINT, signal_handler)
+
+# Create a stop event object for the save_to_csv thread
+stop_saving_event = threading.Event()
+
+# Start the save to CSV thread with start_time and stop_event as arguments
+csv_thread = threading.Thread(target=save_to_csv, args=(start_time, stop_saving_event))
+csv_thread.start()
+
+# Start the data acquisition thread
+data_thread = threading.Thread(target=data_acquisition)
+data_thread.start()
+
+
+# Main loop to update the plot
+while True:
     update_plot()
+

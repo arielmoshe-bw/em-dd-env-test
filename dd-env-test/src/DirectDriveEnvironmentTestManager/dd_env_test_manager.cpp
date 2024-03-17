@@ -24,7 +24,6 @@ void DirectDriveEnvironmentTestManager::setup()
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   
   direct_drive_steering_wheel_ = new DirectDriveSteeringWheel();
-  Serial.println("start sampling");
 }
 
 void DirectDriveEnvironmentTestManager::run()
@@ -84,6 +83,9 @@ void DirectDriveEnvironmentTestManager::handlePowerUpState()
 {
   direct_drive_steering_wheel_->performPowerUpBuiltInTest();
   direct_drive_steering_wheel_->releaseActuator();
+  
+  isHostReady();
+  
   setState(ROW_DRIVING_STATE);
 }
 
@@ -146,6 +148,64 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
       }
       turn_counter_++;
     }
+  }
+}
+
+void DirectDriveEnvironmentTestManager::isHostReady()
+{
+  static bool not_ready = true;
+  while(not_ready)
+  {
+    // Wait for Python to send "ready" message
+    while (!Serial.available()) {}
+    
+    // Read the message from Python
+    String message = Serial.readStringUntil('\n');
+    
+    // If the message is "ready", respond with "start sampling"
+    if (message.equals("ready"))
+    {
+      Serial.println("start sampling");
+      break;
+    }
+  }
+}
+
+void DirectDriveEnvironmentTestManager::printDataForTesting()
+{
+  static bool one_time = true;
+  if(one_time)
+  {
+    isHostReady();
+    one_time = false;
+  }
+  
+  static float current = 0.0f, voltage = 0.0f, velocity = 0.0f;
+  static short temperature = 0;
+  static uint32_t position = 0;
+  static uint16_t fault_code = 0;
+  if (isLoopTickPossible(data_loop_timestamp_in_ms_, DATA_SPIN_RATE_IN_MS_))
+  {
+    Serial.print("Current in amps:");
+    Serial.println(current);
+    Serial.print("Voltage in volts:");
+    Serial.println(voltage);
+    Serial.print("Temperature in degree:");
+    Serial.println(temperature);
+    Serial.print("Encoder velocity in rpm:");
+    Serial.println(velocity);
+    Serial.print("Encoder position in degree:");
+    Serial.println(position);
+    Serial.print("Fault code:");
+    Serial.println(fault_code, HEX);
+    Serial.println(); // Add an empty line to separate data packets
+    
+    current += 0.1;
+    voltage += 0.1;
+    velocity += 0.1;
+    temperature += 1;
+    position += 1;
+    fault_code += 1;
   }
 }
 
