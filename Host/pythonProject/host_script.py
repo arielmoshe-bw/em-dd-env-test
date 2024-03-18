@@ -10,14 +10,6 @@ import threading
 from queue import Queue
 
 error_descriptions = [
-    "Less phase",
-    "Motor stall",
-    "Reserved",
-    "Hall failure",
-    "Current sensing",
-    "232 disconnected",
-    "CAN disconnected",
-    "Motor stalled",
     "Disabled",
     "Overvoltage",
     "Hardware protection",
@@ -25,7 +17,15 @@ error_descriptions = [
     "Undervoltage",
     "N/A",
     "Overcurrent",
-    "Mode failure"
+    "Mode failure",
+    "Less phase",
+    "Motor stall",
+    "Reserved",
+    "Hall failure",
+    "Current sensing",
+    "232 disconnected",
+    "CAN disconnected",
+    "Motor stalled"
 ]
 # Initialize serial connection
 ser = serial.Serial('/dev/ttyACM0', 115200)
@@ -123,7 +123,7 @@ def update_plot():
         ax.autoscale_view()
 
     if not axs[-1].texts:
-        fault_text = axs[-1].text(0.5, 14, "", horizontalalignment='center', verticalalignment='center',
+        fault_text = axs[-1].text(0.5, 14.3, "", horizontalalignment='center', verticalalignment='center',
                                   transform=axs[-1].transAxes, fontsize=15, weight='bold')
     else:
         fault_text = axs[-1].texts[0]
