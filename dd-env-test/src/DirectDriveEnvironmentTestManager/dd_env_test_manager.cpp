@@ -171,44 +171,6 @@ void DirectDriveEnvironmentTestManager::isHostReady()
   }
 }
 
-void DirectDriveEnvironmentTestManager::printDataForTesting()
-{
-  static bool one_time = true;
-  if(one_time)
-  {
-    isHostReady();
-    one_time = false;
-  }
-  
-  static float current = 0.0f, voltage = 0.0f, velocity = 0.0f;
-  static short temperature = 0;
-  static uint32_t position = 0;
-  static uint16_t fault_code = 0;
-  if (isLoopTickPossible(data_loop_timestamp_in_ms_, DATA_SPIN_RATE_IN_MS_))
-  {
-    Serial.print("Current in amps:");
-    Serial.println(current);
-    Serial.print("Voltage in volts:");
-    Serial.println(voltage);
-    Serial.print("Temperature in degree:");
-    Serial.println(temperature);
-    Serial.print("Encoder velocity in rpm:");
-    Serial.println(velocity);
-    Serial.print("Encoder position in degree:");
-    Serial.println(position);
-    Serial.print("Fault code:");
-    Serial.println(fault_code, HEX);
-    Serial.println(); // Add an empty line to separate data packets
-    
-    current += 0.1;
-    voltage += 0.1;
-    velocity += 0.1;
-    temperature += 1;
-    position += 1;
-    fault_code += 1;
-  }
-}
-
 void DirectDriveEnvironmentTestManager::printData()
 {
   if (isLoopTickPossible(data_loop_timestamp_in_ms_, DATA_SPIN_RATE_IN_MS_))

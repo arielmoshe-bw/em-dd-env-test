@@ -250,7 +250,7 @@ bool DirectDriveSteeringWheel::motorKeepAliveContinuousBuiltInTest()
   {
     return false;
   }
-
+  
   if (main_system_timer_in_ms_ - last_motor_ka_msg_timestamp >= MOTOR_KEEP_ALIVE_TIMEOUT_IN_MS_)
   {
     if (motor_keep_alive_is_healthy_)

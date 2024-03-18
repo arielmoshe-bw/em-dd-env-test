@@ -159,7 +159,7 @@ private:
 
   void clearAllMotorFaultCodes() { motor_fault_code_ &= 0x0000; };
   void clearMotorFaultCode(unsigned long motor_fault_code) { motor_fault_code_ &= ~motor_fault_code; };
-  void setMotorFaultCode(unsigned long motor_fault_code) { motor_fault_code_ |= motor_fault_code; };
+  void setMotorFaultCode(unsigned long motor_fault_code) { motor_fault_code_ = motor_fault_code; };
   bool checkIfMotorFaultCodeIsFlagged(uint16_t potential_fault_code) const { return (motor_fault_code_ & potential_fault_code) != 0; };
   bool checkIfMotorDisabledFaultCodeFlagged() { return checkIfMotorFaultCodeIsFlagged(MOTOR_DISABLED_FAULT_CODE_); };
 
