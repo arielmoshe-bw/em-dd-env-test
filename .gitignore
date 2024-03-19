@@ -42,3 +42,5 @@ libraries/
 Host/pythonProject/build/
 
 Host/pythonProject/host_script.spec
+
+*.csv
