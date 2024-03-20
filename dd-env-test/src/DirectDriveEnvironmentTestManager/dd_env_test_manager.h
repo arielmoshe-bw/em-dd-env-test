@@ -41,7 +41,7 @@ private:
   static constexpr uint32_t ROW_NUM_ITERATIONS_ = 50;
   
   unsigned long turn_loop_timestamp_in_ms_ = 0;
-  static constexpr unsigned long TURN_SPIN_RATE_IN_MS_ = 4500;
+  static constexpr unsigned long TURN_SPIN_RATE_IN_MS_ = 6000;
   uint32_t turn_counter_ = 0;
   static constexpr uint32_t TURN_NUM_ITERATIONS_ = 10;
   
