@@ -72,9 +72,10 @@ while True:
         break
 
 # Create deque objects to store data
-sample_time = 0.1
-time_window = 5 * 60
-maxlen_samples = 600
+sample_time = 0.02
+time_window = 60
+maxlen_samples = int(1/sample_time) * time_window
+print(maxlen_samples)
 data1 = deque(maxlen=maxlen_samples)  # For Current in amps
 data2 = deque(maxlen=maxlen_samples)  # For Voltage in volts
 data3 = deque(maxlen=maxlen_samples)  # For Temperature in degree
@@ -85,9 +86,10 @@ data5 = deque(maxlen=maxlen_samples)  # For Encoder position in degree
 plt.ion()
 fig, axs = plt.subplots(5, 1)
 lines = []
+graph_colors = ['blue', 'green', 'red', 'purple', 'orange']
 
 for i in range(5):
-    lines.append(axs[i].plot([], [], lw=2)[0])
+    lines.append(axs[i].plot([], [], lw=2, color=graph_colors[i])[0])
 
 axs[0].set_title('Current in amps', fontsize=15, weight='bold')
 axs[1].set_title('Voltage in volts', fontsize=15, weight='bold')
