@@ -27,8 +27,42 @@ error_descriptions = [
     "CAN disconnected",
     "Motor stalled"
 ]
+
+
+def find_arduino_port():
+    """
+    This function scans available COM ports and returns the first one that contains the word 'Arduino'
+    in its description. You can modify this logic to match specific patterns based on your needs.
+    """
+    ports = [port.device for port in serial.tools.list_ports.comports()]
+    for port in ports:
+        if 'Arduino' in port:
+            return port
+    return None  # No port found matching criteria
+
+
+is_os_windows = False
+
+if os.name == 'nt':  # Windows
+    is_os_windows = True
+    print("Script running on Windows")
+elif os.name == 'posix':
+    print("Script running on a Unix-like system")
+else:
+    print("Script running on an unknown operating system")
+
 # Initialize serial connection
-ser = serial.Serial('/dev/ttyACM0', 115200)
+if is_os_windows:
+    # Initialize serial connection (use the detected port)
+    arduino_port = find_arduino_port()
+    if arduino_port:
+        ser = serial.Serial(arduino_port, 115200)
+        print(f"Connected to Arduino on port: {arduino_port}")
+    else:
+        print("No Arduino found on available COM ports.")
+        sys.exit(1)  # Exit if no Arduino found
+else:
+    ser = serial.Serial('/dev/ttyACM0', 115200)
 
 # Wait for "start sampling" message from Arduino
 while True:
@@ -38,7 +72,9 @@ while True:
         break
 
 # Create deque objects to store data
-maxlen_samples = 50  # Number of samples to save
+sample_time = 0.1
+time_window = 5 * 60
+maxlen_samples = 600
 data1 = deque(maxlen=maxlen_samples)  # For Current in amps
 data2 = deque(maxlen=maxlen_samples)  # For Voltage in volts
 data3 = deque(maxlen=maxlen_samples)  # For Temperature in degree
@@ -99,11 +135,11 @@ def update_plot():
 
     elapsed_time = time.time() - start_time
 
-    x_axis1 = [elapsed_time - j * 0.005 for j in range(len(data1))]
-    x_axis2 = [elapsed_time - j * 0.005 for j in range(len(data2))]
-    x_axis3 = [elapsed_time - j * 0.005 for j in range(len(data3))]
-    x_axis4 = [elapsed_time - j * 0.005 for j in range(len(data4))]
-    x_axis5 = [elapsed_time - j * 0.005 for j in range(len(data5))]
+    x_axis1 = [elapsed_time - j * sample_time for j in range(len(data1))]
+    x_axis2 = [elapsed_time - j * sample_time for j in range(len(data2))]
+    x_axis3 = [elapsed_time - j * sample_time for j in range(len(data3))]
+    x_axis4 = [elapsed_time - j * sample_time for j in range(len(data4))]
+    x_axis5 = [elapsed_time - j * sample_time for j in range(len(data5))]
 
     for k, line in enumerate(lines):
         if k == 0:
@@ -117,7 +153,9 @@ def update_plot():
         elif k == 4:
             line.set_data(x_axis5, data5)
 
+    start_time_limit = elapsed_time - time_window
     for ax in axs:
+        ax.set_xlim(start_time_limit, elapsed_time)
         ax.set_xlabel('Time (s)')
         ax.relim()
         ax.autoscale_view()
@@ -135,7 +173,7 @@ def update_plot():
     fault_text.set_text(fault_code_text)
 
     plt.draw()
-    plt.pause(0.0005)
+    plt.pause(sample_time)
 
 
 # Function for data acquisition
