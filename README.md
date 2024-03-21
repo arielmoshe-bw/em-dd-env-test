@@ -17,5 +17,7 @@ pyserial
 matplotlib
 pyinstaller
 
+pip install -r requirements.txt
+
 running pyinstaller on Windows after installing requirements - python -m PyInstaller host_script.py
 running script on Windows - change dev/tty0 to a specific com port "COMX"
