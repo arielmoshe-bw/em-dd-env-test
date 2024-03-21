@@ -173,8 +173,10 @@ void DirectDriveEnvironmentTestManager::isHostReady()
 
 void DirectDriveEnvironmentTestManager::printData()
 {
-  if (isLoopTickPossible(data_loop_timestamp_in_ms_, DATA_SPIN_RATE_IN_MS_))
+  if(direct_drive_steering_wheel_->getKaFlag())
   {
+    direct_drive_steering_wheel_->setKaFlag(true);
+    
     Serial.print("Current in amps:");
     Serial.println(direct_drive_steering_wheel_->getMotorCurrentInAmps());
     Serial.print("Voltage in volts:");

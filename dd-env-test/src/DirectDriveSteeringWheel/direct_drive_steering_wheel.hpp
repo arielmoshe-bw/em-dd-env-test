@@ -96,6 +96,7 @@ private:
   float motor_encoder_velocity_ = 0.0;
   int32_t motor_encoder_position_ = 0;
   
+  bool ka_flag_ = false;
   unsigned long last_ka_timestamp_;
   int32_t last_motor_encoder_position_ = 0;
   
@@ -183,6 +184,8 @@ public:
   float getMotorEncoderVelocity() const { return motor_encoder_velocity_; }
   int32_t getMotorEncoderPosition() const { return motor_encoder_position_; }
   uint16_t getMotorFaultCode() const { return motor_fault_code_; }
+  bool getKaFlag() const { return ka_flag_; }
+  void setKaFlag(bool value) { ka_flag_ = value; }
 };
 
 #endif

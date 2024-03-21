@@ -366,6 +366,7 @@ void DirectDriveSteeringWheel::parseKeepAliveData(const can_frame &response_can_
   //           main_system_timer_in_ms_ - last_ka_timestamp_);
   last_motor_encoder_position_ = motor_encoder_position_;
   last_ka_timestamp_ = main_system_timer_in_ms_;
+  ka_flag_ = true;
 }
 
 void DirectDriveSteeringWheel::initializePowerUpSequence(bool enable_motor_once_completed)
