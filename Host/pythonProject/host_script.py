@@ -75,7 +75,7 @@ while True:
 sample_time = 0.02
 time_window = 60
 maxlen_samples = int(1/sample_time) * time_window
-print(maxlen_samples)
+
 data1 = deque(maxlen=maxlen_samples)  # For Current in amps
 data2 = deque(maxlen=maxlen_samples)  # For Voltage in volts
 data3 = deque(maxlen=maxlen_samples)  # For Temperature in degree
@@ -219,7 +219,7 @@ def save_to_csv(start_time, stop_saving_event):
                     global fault_code_text
                     data_point = (time.time() - start_time,) + tuple(data_points) + (fault_code_text,)
                     writer.writerow(data_point)
-                time.sleep(0.1)  # Adjust the interval as needed
+                time.sleep(sample_time)  # Adjust the interval as needed
 
     except Exception as e:
         print("Error occurred while writing to CSV:", e)
