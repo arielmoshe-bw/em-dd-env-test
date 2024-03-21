@@ -11,3 +11,11 @@ Check the following documents for more info:
 2.[Env. Testing Steering Motor](https://bw-robotics.atlassian.net/wiki/spaces/RH/pages/436994564/Env.+Testing+Steering+Motor)
 
 To run use executable "em-dd-env-test/Host/pythonProject/dist/host_script".
+
+python libs -
+pyserial
+matplotlib
+pyinstaller
+
+running pyinstaller on Windows after installing requirements - python -m PyInstaller host_script.py
+running script on Windows - change dev/tty0 to a specific com port "COMX"
