@@ -67,7 +67,7 @@ else:
 # Wait for "start sampling" message from Arduino
 while True:
     ser.write(b"ready\n")
-    line = ser.readline().decode('utf-8').strip()
+    line = ser.readline().decode('utf-8', errors='ignore').strip()  # Handle potential encoding issues
     if line == "start sampling":
         break
 
