@@ -47,6 +47,7 @@ private:
   SingletonTimer &timer_;
   
   int rpm_percentage_ = 0;
+  static int constexpr MAX_RPM_PERCENTAGE_ = 1000;
   
   uint8_t enable_motor_payload_data_[8] = {0x23, 0x0d, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00};
   uint8_t disable_motor_payload_data_[8] = {0x23, 0x0c, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00};

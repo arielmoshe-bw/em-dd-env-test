@@ -49,7 +49,7 @@ void DirectDriveEnvironmentTestManager::handleState()
     direct_drive_steering_wheel_->tick();
     
     if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE &&
-      current_state_ != POWER_UP_STATE)
+      current_state_ > WAIT_FOR_HOST_STATE)
     {
       direct_drive_steering_wheel_->performContinuousBuiltInTest();
       printData();

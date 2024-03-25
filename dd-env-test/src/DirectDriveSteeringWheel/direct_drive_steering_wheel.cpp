@@ -151,9 +151,9 @@ void DirectDriveSteeringWheel::tick()
 
 void DirectDriveSteeringWheel::setRpmPercentage(int rpm_percentage)
 {
-  if(abs(rpm_percentage) > 400)
+  if(abs(rpm_percentage) > MAX_RPM_PERCENTAGE_)
   {
-    rpm_percentage = rpm_percentage > 0 ? 400 : - 400;
+    rpm_percentage = rpm_percentage > 0 ? MAX_RPM_PERCENTAGE_ : - MAX_RPM_PERCENTAGE_;
   }
   rpm_percentage_ = rpm_percentage;
 }
