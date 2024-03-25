@@ -11,10 +11,15 @@
 #include "../DirectDriveSteeringWheel/direct_drive_steering_wheel.hpp"
 #include "../SingletonTimer/singleton_timer.hpp"
 
+extern volatile bool is_received_new_data_;
+extern String received_data_buffer_ ;
+extern String received_data_ ;
+
 // Enum defining different states of the Direct Drive Environment Test
 enum DirectDriveEnvironmentTestState : uint8_t
 {
   POWER_UP_STATE,
+  WAIT_FOR_HOST_STATE,
   ROW_DRIVING_STATE,
   TURN_DRIVING_STATE,
 };
@@ -27,6 +32,8 @@ private:
   SingletonTimer& timer_;
   
   DirectDriveEnvironmentTestState current_state_;
+  
+  bool dd_is_received_new_data_ = false;
   
   unsigned long main_system_timer_in_ms_ = 0;
   unsigned long main_loop_timestamp_in_ms_ = 0;
@@ -57,9 +64,12 @@ public:
 private:
   void handleState();
   void handlePowerUpState();
+  void handleWaitForHostState();
   void handleRowDrivingState();
   void handleTurnDrivingState();
-  void isHostReady();
+  bool isHostReady();
+  bool isHostStop();
+  void checkReceivedData();
   
   void printData();
   bool isLoopTickPossible(volatile unsigned long &last_loop_timestamp_in_ms, const unsigned long loop_spin_rate_in_ms);
@@ -71,5 +81,7 @@ public:
   void setState(const DirectDriveEnvironmentTestState newState);
   DirectDriveEnvironmentTestState getState() const {return current_state_;};
 };
+
+void serialEvent();
 
 #endif

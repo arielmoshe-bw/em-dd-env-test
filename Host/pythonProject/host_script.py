@@ -230,6 +230,7 @@ def save_to_csv(start_time, stop_saving_event):
 # Function to handle interrupt signal (Ctrl+C)
 def signal_handler(sig, frame):
     print("Script stopped")
+    ser.write(b"stop\n")
     stop_saving_event.set()  # Signal the save_to_csv thread to stop
 
     global stop_plotting  # Access the global flag

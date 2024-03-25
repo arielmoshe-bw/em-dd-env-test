@@ -30,6 +30,7 @@ void DirectDriveEnvironmentTestManager::run()
 {
   main_system_timer_in_ms_ = timer_.getCurrentTime();
   
+  checkReceivedData();
   if (isLoopTickPossible(main_loop_timestamp_in_ms_, MAIN_LOOP_SPIN_RATE_IN_MS_))
   {
     handleState();
@@ -43,38 +44,47 @@ void DirectDriveEnvironmentTestManager::setState(const DirectDriveEnvironmentTes
 
 void DirectDriveEnvironmentTestManager::handleState()
 {
-  direct_drive_steering_wheel_->tick();
-  
-  if(direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE &&
-     current_state_ != POWER_UP_STATE)
+  if(not isHostStop())
   {
-    direct_drive_steering_wheel_->performContinuousBuiltInTest();
-    printData();
-  }
-  
-  switch (current_state_)
-  {
-    case POWER_UP_STATE:
+    direct_drive_steering_wheel_->tick();
+    
+    if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE &&
+      current_state_ != POWER_UP_STATE)
     {
-      handlePowerUpState();
-      break;
+      direct_drive_steering_wheel_->performContinuousBuiltInTest();
+      printData();
     }
     
-    case ROW_DRIVING_STATE:
+    switch (current_state_)
     {
-      handleRowDrivingState();
-      break;
-    }
-    
-    case TURN_DRIVING_STATE:
-    {
-      handleTurnDrivingState();
-      break;
-    }
-    
-    default:
-    {
-      break;
+      case POWER_UP_STATE:
+      {
+        handlePowerUpState();
+        break;
+      }
+      
+      case WAIT_FOR_HOST_STATE:
+      {
+        handleWaitForHostState();
+        break;
+      }
+      
+      case ROW_DRIVING_STATE:
+      {
+        handleRowDrivingState();
+        break;
+      }
+      
+      case TURN_DRIVING_STATE:
+      {
+        handleTurnDrivingState();
+        break;
+      }
+      
+      default:
+      {
+        break;
+      }
     }
   }
 }
@@ -84,9 +94,15 @@ void DirectDriveEnvironmentTestManager::handlePowerUpState()
   direct_drive_steering_wheel_->performPowerUpBuiltInTest();
   direct_drive_steering_wheel_->releaseActuator();
   
-  isHostReady();
-  
-  setState(ROW_DRIVING_STATE);
+  setState(WAIT_FOR_HOST_STATE);
+}
+
+void DirectDriveEnvironmentTestManager::handleWaitForHostState()
+{
+  if(isHostReady())
+  {
+    setState(ROW_DRIVING_STATE);
+  }
 }
 
 void DirectDriveEnvironmentTestManager::handleRowDrivingState()
@@ -151,23 +167,33 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
   }
 }
 
-void DirectDriveEnvironmentTestManager::isHostReady()
+bool DirectDriveEnvironmentTestManager::isHostReady()
 {
-  static bool not_ready = true;
-  while(not_ready)
+  if (dd_is_received_new_data_)
   {
-    // Wait for Python to send "ready" message
-    while (!Serial.available()) {}
-    
-    // Read the message from Python
-    String message = Serial.readStringUntil('\n');
-    
-    // If the message is "ready", respond with "start sampling"
-    if (message.equals("ready"))
+    if (received_data_.equals("ready\n"))
     {
+      dd_is_received_new_data_ = false;
       Serial.println("start sampling");
-      break;
+      return true;
     }
+  }
+  return false;
+}
+
+bool DirectDriveEnvironmentTestManager::isHostStop()
+{
+  return received_data_.equals("stop\n");
+}
+
+void DirectDriveEnvironmentTestManager::checkReceivedData()
+{
+  if (is_received_new_data_)
+  {
+    received_data_ = received_data_buffer_;
+    dd_is_received_new_data_ = true;
+    is_received_new_data_ = false;
+    received_data_buffer_ = "";
   }
 }
 
@@ -202,4 +228,22 @@ bool DirectDriveEnvironmentTestManager::isLoopTickPossible(volatile unsigned lon
     return true;
   }
   return false;
+}
+
+void serialEvent()
+{
+  while (Serial.available())
+  {
+    // get the new byte:
+    char inChar = (char)Serial.read();
+    
+    // add it to the inputString:
+    received_data_buffer_ += inChar;
+    // if the incoming character is a newline, set a flag so the main loop can
+    // do something about it:
+    if (inChar == '\n')
+    {
+      is_received_new_data_ = true;
+    }
+  }
 }

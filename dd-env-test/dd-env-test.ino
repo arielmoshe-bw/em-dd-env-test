@@ -7,6 +7,10 @@
 #include <HardwareSerial.h>
 #include "src/DirectDriveEnvironmentTestManager/dd_env_test_manager.h"
 
+volatile bool is_received_new_data_ = false;
+String received_data_buffer_ = "";
+String received_data_ = "";
+
 DirectDriveEnvironmentTestManager &dd_env_test_manager = DirectDriveEnvironmentTestManager::getInstance();
 
 void setup()
