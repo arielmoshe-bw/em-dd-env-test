@@ -215,7 +215,7 @@ void DirectDriveEnvironmentTestManager::printData()
     Serial.println(direct_drive_steering_wheel_->getMotorEncoderPosition());
     Serial.print("Fault code:");
     Serial.println(direct_drive_steering_wheel_->getMotorFaultCode(), HEX);
-    Serial.println(); // Add an empty line to separate data packets
+    Serial.println();
   }
 }
 
