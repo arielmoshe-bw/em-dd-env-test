@@ -39,9 +39,6 @@ private:
   unsigned long main_loop_timestamp_in_ms_ = 0;
   static constexpr unsigned long MAIN_LOOP_SPIN_RATE_IN_MS_ = 5;
   
-  unsigned long data_loop_timestamp_in_ms_ = 0;
-  static constexpr unsigned long DATA_SPIN_RATE_IN_MS_ = 100;
-  
   unsigned long row_loop_timestamp_in_ms_ = 0;
   static constexpr unsigned long ROW_SPIN_RATE_IN_MS_ = 200;
   uint32_t row_counter_ = 0;
