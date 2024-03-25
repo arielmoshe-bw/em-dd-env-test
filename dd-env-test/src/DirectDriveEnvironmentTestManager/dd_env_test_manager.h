@@ -34,6 +34,8 @@ private:
   DirectDriveEnvironmentTestState current_state_;
   
   bool dd_is_received_new_data_ = false;
+
+  static int constexpr RPM_PERCENTAGE_ = 398;
   
   unsigned long main_system_timer_in_ms_ = 0;
   unsigned long main_loop_timestamp_in_ms_ = 0;

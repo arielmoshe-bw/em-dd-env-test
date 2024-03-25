@@ -123,11 +123,11 @@ void DirectDriveEnvironmentTestManager::handleRowDrivingState()
         //Log.infoln("handleRowDrivingState row_counter_ = %d", row_counter_);
         if (is_left)
         {
-          direct_drive_steering_wheel_->setRpmPercentage(400);
+          direct_drive_steering_wheel_->setRpmPercentage(RPM_PERCENTAGE_);
         }
         else
         {
-          direct_drive_steering_wheel_->setRpmPercentage(-400);
+          direct_drive_steering_wheel_->setRpmPercentage(-RPM_PERCENTAGE_);
         }
         is_left ^= true;
       }
@@ -154,11 +154,11 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
       {
         if (is_left)
         {
-          direct_drive_steering_wheel_->setRpmPercentage(400);
+          direct_drive_steering_wheel_->setRpmPercentage(RPM_PERCENTAGE_);
         }
         else
         {
-          direct_drive_steering_wheel_->setRpmPercentage(-400);
+          direct_drive_steering_wheel_->setRpmPercentage(-RPM_PERCENTAGE_);
         }
         is_left ^= true;
       }
