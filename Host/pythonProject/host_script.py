@@ -35,9 +35,9 @@ def find_arduino_port():
     This function scans available COM ports and returns the first one that contains the word 'Arduino'
     in its description. You can modify this logic to match specific patterns based on your needs.
     """
-    ports = [port.device for port in serial.tools.list_ports.comports()]
+    ports = [port for port in serial.tools.list_ports.comports()]
     for port in ports:
-        if 'Arduino' in port:
+        if 'Arduino' in port.description:
             return port
     return None  # No port found matching criteria
 
@@ -55,7 +55,7 @@ else:
 # Initialize serial connection
 if is_os_windows:
     # Initialize serial connection (use the detected port)
-    arduino_port = find_arduino_port()
+    arduino_port = find_arduino_port().device
     if arduino_port:
         ser = serial.Serial(arduino_port, 115200)
         print(f"Connected to Arduino on port: {arduino_port}")
