@@ -119,25 +119,32 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
   {
     if (isLoopTickPossible(turn_loop_timestamp_in_ms_, TURN_SPIN_RATE_IN_MS_))
     {
-      //Log.infoln("handleTurnDrivingState turn_counter_= %d", turn_counter_);
-      if (turn_counter_ > TURN_NUM_ITERATIONS_)
+      if (turn_counter_ >= TURN_NUM_ITERATIONS_)
       {
         turn_counter_ = 0;
-        setState(PAUSE_DRIVING_STATE);
+        setState(ROW_DRIVING_STATE);
       }
       else
       {
-        if (is_left)
+        if(turn_counter_ % 2)
         {
-          direct_drive_steering_wheel_->setRpmPercentage(RPM_PERCENTAGE_);
+          setState(PAUSE_DRIVING_STATE);
         }
         else
         {
-          direct_drive_steering_wheel_->setRpmPercentage(-RPM_PERCENTAGE_);
+          //Log.infoln("handleTurnDrivingState turn_counter_= %d", turn_counter_);
+          if (is_left)
+          {
+            direct_drive_steering_wheel_->setRpmPercentage(RPM_PERCENTAGE_);
+          }
+          else
+          {
+            direct_drive_steering_wheel_->setRpmPercentage(-RPM_PERCENTAGE_);
+          }
+          is_left ^= true;
+          turn_counter_++;
         }
-        is_left ^= true;
       }
-      turn_counter_++;
     }
   }
 }
@@ -150,7 +157,7 @@ void DirectDriveEnvironmentTestManager::handlePauseDrivingState()
   {
     if(not is_stopped)
     {
-      //Log.infoln("handlePauseDrivingState");
+      //Log.infoln("handlePauseDrivingState stop");
       direct_drive_steering_wheel_->setRpmPercentage(0);
       is_stopped = true;
       pause_loop_timestamp_in_ms_ = main_system_timer_in_ms_;
@@ -158,7 +165,11 @@ void DirectDriveEnvironmentTestManager::handlePauseDrivingState()
     
     if (isLoopTickPossible(pause_loop_timestamp_in_ms_, PAUSE_SPIN_RATE_IN_MS_))
     {
-      setState(ROW_DRIVING_STATE);
+      //Log.infoln("handlePauseDrivingState go to row");
+      
+      turn_counter_++;
+      
+      setState(TURN_DRIVING_STATE);
       is_stopped = false;
     }
   }
