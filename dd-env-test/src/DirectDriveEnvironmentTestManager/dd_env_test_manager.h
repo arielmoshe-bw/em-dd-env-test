@@ -35,6 +35,7 @@ private:
   DirectDriveEnvironmentTestState current_state_;
   
   bool dd_is_received_new_data_ = false;
+  bool is_stopped_ = true;
 
   static int constexpr RPM_PERCENTAGE_ = 1000;
   
@@ -48,12 +49,12 @@ private:
   static constexpr uint32_t TURN_NUM_ITERATIONS_ = 10 * 2 * 2;
   
   unsigned long pause_loop_timestamp_in_ms_ = 0;
-  static constexpr unsigned long PAUSE_SPIN_RATE_IN_MS_ = 5000;
+  static constexpr unsigned long PAUSE_SPIN_RATE_IN_MS_ = 2000;
   
   unsigned long row_loop_timestamp_in_ms_ = 0;
   static constexpr unsigned long ROW_SPIN_RATE_IN_MS_ = 200;
   uint32_t row_counter_ = 0;
-  static constexpr uint32_t ROW_NUM_ITERATIONS_ = 50;
+  static constexpr uint32_t ROW_NUM_ITERATIONS_ = 100;
   
 public:
   DirectDriveEnvironmentTestManager();

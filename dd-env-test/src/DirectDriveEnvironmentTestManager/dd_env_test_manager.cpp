@@ -48,7 +48,7 @@ void DirectDriveEnvironmentTestManager::handleState()
   {
     direct_drive_steering_wheel_->tick();
     
-    if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE &&
+    if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE and
       current_state_ > WAIT_FOR_HOST_STATE)
     {
       direct_drive_steering_wheel_->performContinuousBuiltInTest();
@@ -117,7 +117,7 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
   
   if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE)
   {
-    if (isLoopTickPossible(turn_loop_timestamp_in_ms_, TURN_SPIN_RATE_IN_MS_))
+    if (is_stopped_ or isLoopTickPossible(turn_loop_timestamp_in_ms_, TURN_SPIN_RATE_IN_MS_))
     {
       if (turn_counter_ >= TURN_NUM_ITERATIONS_)
       {
@@ -142,6 +142,9 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
             direct_drive_steering_wheel_->setRpmPercentage(-RPM_PERCENTAGE_);
           }
           is_left ^= true;
+          
+          turn_loop_timestamp_in_ms_ = main_system_timer_in_ms_;
+          is_stopped_ = false;
           turn_counter_++;
         }
       }
@@ -151,26 +154,19 @@ void DirectDriveEnvironmentTestManager::handleTurnDrivingState()
 
 void DirectDriveEnvironmentTestManager::handlePauseDrivingState()
 {
-  static bool is_stopped = false;
-  
   if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE)
   {
-    if(not is_stopped)
+    if(not is_stopped_)
     {
-      //Log.infoln("handlePauseDrivingState stop");
       direct_drive_steering_wheel_->setRpmPercentage(0);
-      is_stopped = true;
+      is_stopped_ = true;
       pause_loop_timestamp_in_ms_ = main_system_timer_in_ms_;
     }
     
     if (isLoopTickPossible(pause_loop_timestamp_in_ms_, PAUSE_SPIN_RATE_IN_MS_))
     {
-      //Log.infoln("handlePauseDrivingState go to row");
-      
       turn_counter_++;
-      
       setState(TURN_DRIVING_STATE);
-      is_stopped = false;
     }
   }
 }
@@ -190,7 +186,7 @@ void DirectDriveEnvironmentTestManager::handleRowDrivingState()
       }
       else
       {
-        //Log.infoln("handleRowDrivingState row_counter_ = %d", row_counter_);
+        Log.infoln("handleRowDrivingState row_counter_ = %d", row_counter_);
         if (is_left)
         {
           direct_drive_steering_wheel_->setRpmPercentage(RPM_PERCENTAGE_);
@@ -201,6 +197,8 @@ void DirectDriveEnvironmentTestManager::handleRowDrivingState()
         }
         is_left ^= true;
       }
+      
+      row_loop_timestamp_in_ms_ = main_system_timer_in_ms_;
       row_counter_++;
     }
   }
