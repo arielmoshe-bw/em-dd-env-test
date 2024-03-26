@@ -1,6 +1,7 @@
 import os
 import sys
 import serial
+import serial.tools.list_ports
 import csv
 import signal
 import matplotlib.pyplot as plt
