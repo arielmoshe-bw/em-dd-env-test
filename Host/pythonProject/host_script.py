@@ -96,7 +96,7 @@ axs[0].set_title('Current in amps', fontsize=15, weight='bold')
 axs[1].set_title('Voltage in volts', fontsize=15, weight='bold')
 axs[2].set_title('Temperature in degree', fontsize=15, weight='bold')
 axs[3].set_title('Encoder velocity in rpm', fontsize=15, weight='bold')
-axs[4].set_title('Encoder position in steps (-50k, 50k) 5 circles cw & 5 circles ccw', fontsize=15, weight='bold')
+axs[4].set_title('Encoder position in steps (-50k, 50k)', fontsize=15, weight='bold')
 plt.tight_layout()
 
 # Initialize fault code
@@ -218,7 +218,7 @@ def save_to_csv(start_time, stop_saving_event):
                     for queue in [data1, data2, data3, data4, data5]:
                         data_points.append(queue[-1])  # Get the latest value from each queue
                     global fault_code_text
-                    data_point = (time.time() - start_time,) + tuple(data_points) + (fault_code_text,)
+                    data_point = (time.time() - start_time,) + tuple(data_points) + (fault_code_text[12:],)
                     writer.writerow(data_point)
                 time.sleep(sample_time)  # Adjust the interval as needed
 
