@@ -1,3 +1,2 @@
-python>=3.8  # Ensure Python version 3.8 or higher
 matplotlib
 pyserial
