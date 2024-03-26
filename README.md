@@ -16,8 +16,10 @@ Run script -
 1) pip install -r requirements.txt
 2) open terminal in the directory em-dd-env-test/Host/pythonProject/
 3) generate executable -
+   
    Windows:
    run command "python -m PyInstaller host_script.py"
+   
    Ubuntu:
    run command "pyinstaller --onefile host_script.py"
-4) change directory em-dd-env-test/Host/pythonProject/dist and run host_script executble.
+5) change directory em-dd-env-test/Host/pythonProject/dist and run host_script executble.
