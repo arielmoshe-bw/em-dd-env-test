@@ -10,6 +10,8 @@ Check the following documents for more info:
 
 2.[Env. Testing Steering Motor](https://bw-robotics.atlassian.net/wiki/spaces/RH/pages/436994564/Env.+Testing+Steering+Motor)
 
+3. Autopilot motor software V5.4 for configuring motor firmware parameters - [download link](https://www.dcmotorkeya.com/download.html)
+   
 Run script -
 1) pip install -r requirements.txt
 2) open terminal in the directory em-dd-env-test/Host/pythonProject/
