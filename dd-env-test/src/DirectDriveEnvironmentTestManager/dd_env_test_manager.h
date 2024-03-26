@@ -76,7 +76,7 @@ private:
   bool isHostStop();
   void checkReceivedData();
   
-  void printData();
+  void serialWriteData();
   bool isLoopTickPossible(volatile unsigned long &last_loop_timestamp_in_ms, const unsigned long loop_spin_rate_in_ms);
   
 public:

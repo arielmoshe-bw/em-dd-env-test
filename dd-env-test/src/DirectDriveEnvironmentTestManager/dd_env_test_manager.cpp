@@ -52,7 +52,7 @@ void DirectDriveEnvironmentTestManager::handleState()
       current_state_ > WAIT_FOR_HOST_STATE)
     {
       direct_drive_steering_wheel_->performContinuousBuiltInTest();
-      printData();
+      serialWriteData();
     }
     
     switch (current_state_)
@@ -234,7 +234,7 @@ void DirectDriveEnvironmentTestManager::checkReceivedData()
   }
 }
 
-void DirectDriveEnvironmentTestManager::printData()
+void DirectDriveEnvironmentTestManager::serialWriteData()
 {
   if(direct_drive_steering_wheel_->getKaFlag())
   {
