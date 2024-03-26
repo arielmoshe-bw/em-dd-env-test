@@ -20,8 +20,9 @@ enum DirectDriveEnvironmentTestState : uint8_t
 {
   POWER_UP_STATE,
   WAIT_FOR_HOST_STATE,
-  ROW_DRIVING_STATE,
   TURN_DRIVING_STATE,
+  PAUSE_DRIVING_STATE,
+  ROW_DRIVING_STATE,
 };
 
 class DirectDriveEnvironmentTestManager
@@ -41,15 +42,18 @@ private:
   unsigned long main_loop_timestamp_in_ms_ = 0;
   static constexpr unsigned long MAIN_LOOP_SPIN_RATE_IN_MS_ = 5;
   
-  unsigned long row_loop_timestamp_in_ms_ = 0;
-  static constexpr unsigned long ROW_SPIN_RATE_IN_MS_ = 200;
-  uint32_t row_counter_ = 0;
-  static constexpr uint32_t ROW_NUM_ITERATIONS_ = 50;
-  
   unsigned long turn_loop_timestamp_in_ms_ = 0;
   static constexpr unsigned long TURN_SPIN_RATE_IN_MS_ = 6000;
   uint32_t turn_counter_ = 0;
   static constexpr uint32_t TURN_NUM_ITERATIONS_ = 10;
+  
+  unsigned long pause_loop_timestamp_in_ms_ = 0;
+  static constexpr unsigned long PAUSE_SPIN_RATE_IN_MS_ = 5000;
+  
+  unsigned long row_loop_timestamp_in_ms_ = 0;
+  static constexpr unsigned long ROW_SPIN_RATE_IN_MS_ = 200;
+  uint32_t row_counter_ = 0;
+  static constexpr uint32_t ROW_NUM_ITERATIONS_ = 50;
   
 public:
   DirectDriveEnvironmentTestManager();
@@ -64,8 +68,9 @@ private:
   void handleState();
   void handlePowerUpState();
   void handleWaitForHostState();
-  void handleRowDrivingState();
   void handleTurnDrivingState();
+  void handlePauseDrivingState();
+  void handleRowDrivingState();
   bool isHostReady();
   bool isHostStop();
   void checkReceivedData();
