@@ -102,6 +102,7 @@ plt.tight_layout()
 # Initialize fault code
 fault_code = 0
 fault_code_text = ""
+command = ""
 
 stop_plotting = False
 
@@ -114,17 +115,18 @@ start_time = time.time()
 
 # Function to update the plot and display fault code as text
 def update_plot():
-    global start_time
+    global start_time, fault_code, fault_code_text, command
 
     while not data_queue.empty():
         item = data_queue.get()
         if item is None:
             continue
         label, value = item
-        if label == "Fault code":
-            global fault_code
-            fault_code = int(value, 16)
 
+        if label == "Fault code":
+            fault_code = int(value, 16)
+        elif label == "Current command":
+            command = value
         elif label == "Current in amps":
             data1.appendleft(float(value))
         elif label == "Voltage in volts":
@@ -164,16 +166,20 @@ def update_plot():
         ax.autoscale_view()
 
     if not axs[-1].texts:
-        fault_text = axs[-1].text(0.5, 14.3, "", horizontalalignment='center', verticalalignment='center',
+        fault_text = axs[-1].text(0.65, 14.3, "", horizontalalignment='center', verticalalignment='center',
+                                  transform=axs[-1].transAxes, fontsize=15, weight='bold')
+        command_text = axs[-1].text(0.35, 14.3, "", horizontalalignment='center', verticalalignment='center',
                                   transform=axs[-1].transAxes, fontsize=15, weight='bold')
     else:
         fault_text = axs[-1].texts[0]
+        command_text = axs[-1].texts[1]
 
     # Extract and display error descriptions from fault code
     active_errors = [error_descriptions[i] for i in range(16) if (fault_code >> i) & 1]
-    global fault_code_text
     fault_code_text = "Fault code: " + hex(fault_code) + " - [ " + ", ".join(active_errors) + " ]"
     fault_text.set_text(fault_code_text)
+
+    command_text.set_text("Current command:" + command)
 
     plt.draw()
     plt.pause(sample_time)
@@ -204,12 +210,13 @@ def data_acquisition():
 
 # Function to periodically save data to CSV file
 def save_to_csv(start_time, stop_saving_event):
+    global fault_code_text, command
     try:
         with open('data.csv', 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(
                 ['Time (s)', 'Current (amps)', 'Voltage (volts)', 'Temperature (degree)', 'Encoder velocity (rpm)',
-                 'Encoder position (degree)', 'Error Description'])
+                 'Encoder position (degree)', 'Error Description', 'Driving State'])
 
             while not stop_saving_event.is_set():
                 # Collect data from all queues (assuming same length)
@@ -217,8 +224,7 @@ def save_to_csv(start_time, stop_saving_event):
                 if len(data1) > 0:
                     for queue in [data1, data2, data3, data4, data5]:
                         data_points.append(queue[-1])  # Get the latest value from each queue
-                    global fault_code_text
-                    data_point = (time.time() - start_time,) + tuple(data_points) + (fault_code_text[12:],)
+                    data_point = (time.time() - start_time,) + tuple(data_points) + (fault_code_text[12:],) + command
                     writer.writerow(data_point)
                 time.sleep(sample_time)  # Adjust the interval as needed
 
@@ -230,9 +236,9 @@ def save_to_csv(start_time, stop_saving_event):
 
 # Function to handle interrupt signal (Ctrl+C)
 def signal_handler(sig, frame):
-    stop_saving_event.set()  # Signal the save_to_csv thread to stop
+    stop_saving_event.set()  
 
-    global stop_plotting  # Access the global flag
+    global stop_plotting
     stop_plotting = True
 
     data_thread.join()

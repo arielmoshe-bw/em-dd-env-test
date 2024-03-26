@@ -240,6 +240,8 @@ void DirectDriveEnvironmentTestManager::serialWriteData()
   {
     direct_drive_steering_wheel_->setKaFlag(true);
     
+    Serial.print("Current command:");
+    Serial.println(stateToString(current_state_));
     Serial.print("Current in amps:");
     Serial.println(direct_drive_steering_wheel_->getMotorCurrentInAmps());
     Serial.print("Voltage in volts:");
@@ -254,6 +256,18 @@ void DirectDriveEnvironmentTestManager::serialWriteData()
     Serial.println(direct_drive_steering_wheel_->getMotorFaultCode(), HEX);
     Serial.println();
   }
+}
+
+const char* DirectDriveEnvironmentTestManager::stateToString(DirectDriveEnvironmentTestState state)
+{
+  const char *state_str =
+    state == DirectDriveEnvironmentTestState::POWER_UP_STATE ? "POWER_UP" :
+    state == DirectDriveEnvironmentTestState::WAIT_FOR_HOST_STATE ? "WAIT_FOR_HOST" :
+    state == DirectDriveEnvironmentTestState::TURN_DRIVING_STATE ? "TURN" :
+    state == DirectDriveEnvironmentTestState::PAUSE_DRIVING_STATE ? "PAUSE" :
+    state == DirectDriveEnvironmentTestState::ROW_DRIVING_STATE ? "ROW" :
+    "UNKNOWN_STATE";
+  return state_str;
 }
 
 bool DirectDriveEnvironmentTestManager::isLoopTickPossible(volatile unsigned long &last_loop_timestamp_in_ms,

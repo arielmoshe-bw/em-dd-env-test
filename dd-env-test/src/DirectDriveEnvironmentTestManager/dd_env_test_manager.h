@@ -77,6 +77,8 @@ private:
   void checkReceivedData();
   
   void serialWriteData();
+  const char* stateToString(DirectDriveEnvironmentTestState state);
+  
   bool isLoopTickPossible(volatile unsigned long &last_loop_timestamp_in_ms, const unsigned long loop_spin_rate_in_ms);
   
 public:
