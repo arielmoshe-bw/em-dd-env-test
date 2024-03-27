@@ -224,7 +224,7 @@ def save_to_csv(start_time, stop_saving_event):
                 if len(data1) > 0:
                     for queue in [data1, data2, data3, data4, data5]:
                         data_points.append(queue[-1])  # Get the latest value from each queue
-                    data_point = (time.time() - start_time,) + tuple(data_points) + (fault_code_text[12:],) + command
+                    data_point = (time.time() - start_time,) + tuple(data_points) + (fault_code_text[12:],) + (command,)
                     writer.writerow(data_point)
                 time.sleep(sample_time)  # Adjust the interval as needed
 
@@ -236,7 +236,7 @@ def save_to_csv(start_time, stop_saving_event):
 
 # Function to handle interrupt signal (Ctrl+C)
 def signal_handler(sig, frame):
-    stop_saving_event.set()  
+    stop_saving_event.set()
 
     global stop_plotting
     stop_plotting = True
