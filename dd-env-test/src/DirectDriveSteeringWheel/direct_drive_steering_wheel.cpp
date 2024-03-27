@@ -361,7 +361,7 @@ void DirectDriveSteeringWheel::parseKeepAliveData(const can_frame &response_can_
     motor_has_moved_at_least_once_ = true;
   }
 
-  motor_encoder_velocity_ = float(motor_encoder_position_ - last_motor_encoder_position_) / (0.001 * (main_system_timer_in_ms_ - last_ka_timestamp_));
+  //motor_encoder_velocity_ = float(motor_encoder_position_ - last_motor_encoder_position_) / (0.001 * (main_system_timer_in_ms_ - last_ka_timestamp_));
   //Log.infoln(F("%l, %l, %F, %l"), motor_encoder_position_, last_motor_encoder_position_, motor_encoder_velocity_,
   //           main_system_timer_in_ms_ - last_ka_timestamp_);
   last_motor_encoder_position_ = motor_encoder_position_;
