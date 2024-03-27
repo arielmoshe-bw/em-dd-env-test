@@ -105,7 +105,8 @@ void DirectDriveEnvironmentTestManager::handlePowerUpState()
 
 void DirectDriveEnvironmentTestManager::handleWaitForHostState()
 {
-  if(isHostReady())
+  if (direct_drive_steering_wheel_->getOperationMode() == DirectDriveSteeringWheel::MotorOperationMode::STABLE
+    and isHostReady())
   {
     setState(TURN_DRIVING_STATE);
   }
