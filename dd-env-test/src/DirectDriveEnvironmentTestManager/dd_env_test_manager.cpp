@@ -187,7 +187,7 @@ void DirectDriveEnvironmentTestManager::handleRowDrivingState()
       }
       else
       {
-        Log.infoln("handleRowDrivingState row_counter_ = %d", row_counter_);
+        //Log.infoln("handleRowDrivingState row_counter_ = %d", row_counter_);
         if (is_left)
         {
           direct_drive_steering_wheel_->setRpmPercentage(RPM_PERCENTAGE_);
