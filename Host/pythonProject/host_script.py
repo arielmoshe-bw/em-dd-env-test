@@ -1,5 +1,6 @@
 import os
 import re
+import datetime
 import sys
 import serial
 import serial.tools.list_ports
@@ -226,8 +227,13 @@ def data_acquisition():
 # Function to periodically save data to CSV file
 def save_to_csv(start_time, stop_saving_event):
     global fault_code_text, command
+
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"data_{timestamp}.csv"
+
     try:
-        with open('data.csv', 'w', newline='') as csvfile:
+        with open(filename, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(
                 ['Time (s)', 'Current (amps)', 'Voltage (volts)', 'Temperature (degree)', 'Encoder velocity (rpm)',
