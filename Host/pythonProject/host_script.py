@@ -125,10 +125,10 @@ def update_plot():
 
         label, value = item
 
-        if label == "Fault code":
-            fault_code = int(value, 16)
-        elif label == "Current command":
+        if label == "Current command":
             command = value
+        elif label == "Fault code":
+            fault_code = int(value, 16)
         elif label == "Current in amps":
             data1.appendleft(float(value))
         elif label == "Voltage in volts":
@@ -214,7 +214,7 @@ def data_acquisition():
         if match:
             label, value = match.groups()
 
-            if not is_number(value):
+            if label != "Current command" and not is_number(value):
                 print("Invalid data format:", line)
                 continue
 
