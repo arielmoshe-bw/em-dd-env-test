@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import serial
 import serial.tools.list_ports
@@ -199,13 +200,13 @@ def data_acquisition():
         if not line:
             continue
 
-        parts = line.split(':')
-        if len(parts) != 2:
+        pattern = r"^([^:]+):(.+)$"  # Regex pattern for label:value format
+        match = re.match(pattern, line)
+        if match:
+            label, value = match.groups()
+            data_queue.put((label, value))
+        else:
             print("Invalid data format:", line)
-            continue
-
-        label, value = parts
-        data_queue.put((label, value))
 
 
 # Function to periodically save data to CSV file
