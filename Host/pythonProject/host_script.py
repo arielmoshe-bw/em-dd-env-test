@@ -76,7 +76,7 @@ while True:
 # Create deque objects to store data
 sample_time = 0.02
 time_window = 60
-maxlen_samples = int(1/sample_time) * time_window
+maxlen_samples = int(1 / sample_time) * time_window
 
 data1 = deque(maxlen=maxlen_samples)  # For Current in amps
 data2 = deque(maxlen=maxlen_samples)  # For Voltage in volts
@@ -122,6 +122,7 @@ def update_plot():
         item = data_queue.get()
         if item is None:
             continue
+
         label, value = item
 
         if label == "Fault code":
@@ -170,7 +171,7 @@ def update_plot():
         fault_text = axs[-1].text(0.65, 14.3, "", horizontalalignment='center', verticalalignment='center',
                                   transform=axs[-1].transAxes, fontsize=15, weight='bold')
         command_text = axs[-1].text(0.35, 14.3, "", horizontalalignment='center', verticalalignment='center',
-                                  transform=axs[-1].transAxes, fontsize=15, weight='bold')
+                                    transform=axs[-1].transAxes, fontsize=15, weight='bold')
     else:
         fault_text = axs[-1].texts[0]
         command_text = axs[-1].texts[1]
@@ -184,6 +185,14 @@ def update_plot():
 
     plt.draw()
     plt.pause(sample_time)
+
+
+def is_number(number):
+    try:
+        float(number)
+        return True
+    except ValueError:
+        return False
 
 
 # Function for data acquisition
@@ -204,6 +213,11 @@ def data_acquisition():
         match = re.match(pattern, line)
         if match:
             label, value = match.groups()
+
+            if not is_number(value):
+                print("Invalid data format:", line)
+                continue
+
             data_queue.put((label, value))
         else:
             print("Invalid data format:", line)
