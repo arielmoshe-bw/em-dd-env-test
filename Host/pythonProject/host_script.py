@@ -188,9 +188,17 @@ def update_plot():
     plt.pause(sample_time)
 
 
-def is_number(number):
+def is_float(number):
     try:
         float(number)
+        return True
+    except ValueError:
+        return False
+
+
+def is_int(number):
+    try:
+        int(number)
         return True
     except ValueError:
         return False
@@ -215,9 +223,11 @@ def data_acquisition():
         if match:
             label, value = match.groups()
 
-            if label != "Current command" and not is_number(value):
-                print("Invalid data format:", line)
-                continue
+            if label != "Current command":
+                if ((label in ["Current in amps", "Voltage in volts", "Encoder velocity in rpm"] and not is_float(value))
+                        or (label in ["Fault code", "Temperature in degree", "Encoder position in degree"] and not is_int(value))):
+                    print("Invalid data format:", line)
+                    continue
 
             data_queue.put((label, value))
         else:
